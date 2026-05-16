@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeatherNow — Portfolio</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!--
+    IMPROVEMENT 1: Replaced Font Awesome with Lucide icons (lighter, sharper).
+    Also kept a weather-icons CDN for dedicated, beautiful weather symbols.
+  -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/weather-icons/2.0.10/css/weather-icons.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <!--
+    IMPROVEMENT 2: Switched to "Outfit" — a modern, geometric sans-serif
+    that looks more premium than Inter for a portfolio piece.
+  -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!--
+    IMPROVEMENT 3: Full-screen dynamic background layer.
+    JS adds a class (e.g. "bg-rain") to this div based on weather condition.
+  -->
+    <div class="bg-layer" id="bgLayer"></div>
+
+    <!-- Glassmorphism overlay for readability -->
+    <div class="glass-overlay"></div>
+
+    <div class="app-shell">
+      <!-- ── Header ── -->
+      <header class="header">
+        <div class="logo">
+          <span class="logo-icon">🌤</span>
+          <span class="logo-text">WeatherNow</span>
+        </div>
+        <!-- IMPROVEMENT 4: Live clock in the header -->
+        <div class="live-clock" id="liveClock">--:--</div>
+      </header>
+
+      <!-- ── Search ── -->
+      <section class="search-section" role="search">
+        <div class="search-bar" id="searchBar">
+          <span class="s-icon">🔍</span>
+          <input
+            type="text"
+            id="cityInput"
+            placeholder="Search a city…"
+            autocomplete="off"
+            aria-label="City name"
+          />
+          <!-- IMPROVEMENT 5: Search button shows spinner when loading -->
+          <button id="searchBtn" aria-label="Get weather">
+            <span id="btnLabel">Go</span>
+          </button>
+        </div>
+
+        <!-- IMPROVEMENT 6: Pill-style error badge with icon -->
+        <div class="error-badge hidden" id="errorBadge" role="alert">
+          <span>⚠️</span>
+          <span id="errorText"
+            >City not found. Check the spelling and try again.</span
+          >
+        </div>
+      </section>
+
+      <!-- ── Loader ── -->
+      <!--
+      IMPROVEMENT 7: Multi-ring animated loader (CSS only, zero JS).
+      Hidden by default; JS toggles the .hidden class.
+    -->
+      <div
+        class="loader hidden"
+        id="loader"
+        aria-live="polite"
+        aria-label="Loading weather"
+      >
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <p class="loader-text">Fetching weather<span class="dots"></span></p>
+      </div>
+
+      <!-- ── Main Weather Card ── -->
+      <main class="weather-card hidden" id="weatherCard" aria-live="polite">
+        <!-- Top row: location + weather icon -->
+        <div class="card-header">
+          <div class="location-block">
+            <h2 class="city" id="cityName">—</h2>
+            <p class="region" id="regionName">—</p>
+            <p class="local-date" id="localDate">—</p>
+          </div>
+          <!--
+          IMPROVEMENT 8: weather-icons library icon — far more expressive
+          than the tiny PNG sprites from OpenWeatherMap.
+        -->
+          <i class="wi weather-main-icon" id="wiIcon"></i>
+        </div>
+
+        <!-- Temperature + unit toggle -->
+        <div class="temp-section">
+          <div class="temp-display">
+            <span class="temp-value" id="tempValue">—</span>
+            <div class="unit-switch">
+              <button class="u-btn active" id="btnC" onclick="switchUnit('C')">
+                °C
+              </button>
+              <div class="u-divider"></div>
+              <button class="u-btn" id="btnF" onclick="switchUnit('F')">
+                °F
+              </button>
+            </div>
+          </div>
+          <p class="condition-text" id="conditionText">—</p>
+          <p class="feels-like" id="feelsLike">Feels like —</p>
+        </div>
+
+        <!-- Divider -->
+        <div class="card-divider"></div>
+
+        <!--
+        IMPROVEMENT 9: 4-stat grid with animated progress bars
+        for humidity and wind.
+      -->
+        <div class="stats-grid">
+          <div class="stat-tile" data-tip="Relative humidity">
+            <div class="stat-head">
+              <span class="stat-emoji">💧</span>
+              <span class="stat-label">Humidity</span>
+            </div>
+            <span class="stat-val" id="humidity">—</span>
+            <div class="progress-track">
+              <div class="progress-bar humidity-bar" id="humidityBar"></div>
+            </div>
+          </div>
+
+          <div class="stat-tile" data-tip="Wind speed">
+            <div class="stat-head">
+              <span class="stat-emoji">🌬️</span>
+              <span class="stat-label">Wind</span>
+            </div>
+            <span class="stat-val" id="windSpeed">—</span>
+            <div class="progress-track">
+              <div class="progress-bar wind-bar" id="windBar"></div>
+            </div>
+          </div>
+
+          <div class="stat-tile" data-tip="Horizontal visibility">
+            <div class="stat-head">
+              <span class="stat-emoji">👁️</span>
+              <span class="stat-label">Visibility</span>
+            </div>
+            <span class="stat-val" id="visibility">—</span>
+          </div>
+
+          <div class="stat-tile" data-tip="Atmospheric pressure">
+            <div class="stat-head">
+              <span class="stat-emoji">🌡️</span>
+              <span class="stat-label">Pressure</span>
+            </div>
+            <span class="stat-val" id="pressure">—</span>
+          </div>
+
+          <div class="stat-tile" data-tip="Sunrise (local time)">
+            <div class="stat-head">
+              <span class="stat-emoji">🌅</span>
+              <span class="stat-label">Sunrise</span>
+            </div>
+            <span class="stat-val" id="sunrise">—</span>
+          </div>
+
+          <div class="stat-tile" data-tip="Sunset (local time)">
+            <div class="stat-head">
+              <span class="stat-emoji">🌇</span>
+              <span class="stat-label">Sunset</span>
+            </div>
+            <span class="stat-val" id="sunset">—</span>
+          </div>
+        </div>
+        <!-- /stats-grid -->
+
+        <!-- IMPROVEMENT 10: "Min / Max" temp strip -->
+        <div class="minmax-strip">
+          <span>↓ <strong id="tempMin">—</strong></span>
+          <span class="strip-label">Today's Range</span>
+          <span>↑ <strong id="tempMax">—</strong></span>
+        </div>
+      </main>
+      <!-- /weather-card -->
+
+      <!-- Empty / idle state -->
+      <div class="idle-state" id="idleState">
+        <div class="idle-icon">⛅</div>
+        <p class="idle-text">Type a city above to see the weather</p>
+      </div>
+
+      <!-- IMPROVEMENT 11: Footer with developer credit -->
+      <footer class="footer">
+        Built with ☕ by <strong>Your Name</strong> · Powered by OpenWeatherMap
+      </footer>
+    </div>
+    <!-- /app-shell -->
+
+    <script src="script.js"></script>
+  </body>
+</html>

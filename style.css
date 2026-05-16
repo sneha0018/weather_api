@@ -1,0 +1,683 @@
+/* ================================================================
+   style.css  —  WeatherNow Portfolio Edition
+   Improvements:
+     · Dynamic gradient backgrounds per weather condition
+     · Glassmorphism card
+     · Multi-ring loader animation
+     · Progress bars on stats
+     · Responsive from 320 px → 4 K
+     · Smooth micro-interactions on every interactive element
+   ================================================================ */
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Design tokens ── */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 48px rgba(0, 0, 0, 0.45);
+  --text-1: #f0f4ff;
+  --text-2: rgba(240, 244, 255, 0.65);
+  --text-3: rgba(240, 244, 255, 0.4);
+  --accent: #7dd3fc; /* sky-300 */
+  --radius-card: 24px;
+  --radius-tile: 14px;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur: 0.35s;
+
+  /* Default background — overridden by JS via .bg-* classes */
+  --grad-a: #1e3a5f;
+  --grad-b: #0f172a;
+}
+
+/* ── IMPROVEMENT: Dynamic Backgrounds ── */
+/* Each class maps a weather condition to a unique gradient. */
+.bg-clear {
+  --grad-a: #f59e0b;
+  --grad-b: #b45309;
+} /* sunny orange */
+.bg-clouds {
+  --grad-a: #475569;
+  --grad-b: #1e293b;
+} /* steel grey   */
+.bg-rain {
+  --grad-a: #1e40af;
+  --grad-b: #0f172a;
+} /* deep blue    */
+.bg-drizzle {
+  --grad-a: #0284c7;
+  --grad-b: #0c4a6e;
+} /* light blue   */
+.bg-thunderstorm {
+  --grad-a: #1e1b4b;
+  --grad-b: #000000;
+} /* stormy indigo */
+.bg-snow {
+  --grad-a: #bae6fd;
+  --grad-b: #7dd3fc;
+} /* icy pale     */
+.bg-mist,
+.bg-fog,
+.bg-haze {
+  --grad-a: #6b7280;
+  --grad-b: #374151;
+} /* foggy grey   */
+.bg-sand,
+.bg-dust {
+  --grad-a: #92400e;
+  --grad-b: #78350f;
+} /* sandy brown  */
+
+/* ── Full-screen background layer ── */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--grad-a) 0%, var(--grad-b) 100%);
+  transition: background var(--dur) var(--ease);
+  z-index: 0;
+}
+
+/* Subtle animated noise/grain feel via pseudo */
+.bg-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse at 20% 20%,
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 55%
+    ),
+    radial-gradient(ellipse at 80% 80%, rgba(0, 0, 0, 0.15) 0%, transparent 55%);
+}
+
+/* Darkening glass overlay for text contrast */
+.glass-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(0px);
+  z-index: 1;
+}
+
+/* ── App shell — sits above background layers ── */
+.app-shell {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 16px 24px;
+  gap: 20px;
+}
+
+/* ── Header ── */
+.header {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  font-size: 1.5rem;
+}
+
+.logo-text {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+}
+
+/* IMPROVEMENT: Live clock */
+.live-clock {
+  font-family: "Outfit", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 4px 12px;
+  letter-spacing: 0.5px;
+}
+
+/* ── Search ── */
+.search-section {
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 6px 6px 6px 18px;
+  gap: 10px;
+  backdrop-filter: blur(16px);
+  transition:
+    border-color var(--dur),
+    box-shadow var(--dur);
+}
+
+.search-bar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.2);
+}
+
+.s-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.search-bar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-1);
+  font-family: "Outfit", sans-serif;
+  font-size: 1rem;
+}
+
+.search-bar input::placeholder {
+  color: var(--text-3);
+}
+
+/* IMPROVEMENT: "Go" button with hover scale + active press */
+.search-bar button {
+  background: var(--accent);
+  color: #0c4a6e;
+  border: none;
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-family: "Outfit", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    transform var(--dur),
+    background var(--dur);
+}
+
+.search-bar button:hover {
+  transform: scale(1.06);
+  background: #bae6fd;
+}
+.search-bar button:active {
+  transform: scale(0.95);
+}
+.search-bar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* IMPROVEMENT: Pill error badge */
+.error-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 50px;
+  padding: 8px 16px;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  animation: fadeSlideDown 0.3s var(--ease);
+}
+
+/* ── IMPROVEMENT: Multi-ring loader ── */
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 48px 0;
+}
+
+/* Three concentric rotating rings at different speeds */
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.ring-1 {
+  width: 56px;
+  height: 56px;
+  border-top-color: var(--accent);
+  animation: spin 1s linear infinite;
+}
+
+.ring-2 {
+  width: 42px;
+  height: 42px;
+  border-right-color: rgba(125, 211, 252, 0.5);
+  animation: spin 1.4s linear infinite reverse;
+}
+
+.ring-3 {
+  width: 28px;
+  height: 28px;
+  border-bottom-color: rgba(125, 211, 252, 0.25);
+  animation: spin 2s linear infinite;
+}
+
+/* Wrapper to stack rings */
+.loader {
+  position: relative;
+}
+
+.loader-text {
+  margin-top: 64px;
+  color: var(--text-2);
+  font-size: 0.9rem;
+  font-family: "Outfit", sans-serif;
+}
+
+/* Animated ellipsis "..." */
+.dots::after {
+  content: "";
+  animation: dots 1.2s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: "";
+  }
+  33% {
+    content: ".";
+  }
+  66% {
+    content: "..";
+  }
+  100% {
+    content: "...";
+  }
+}
+
+/* ── IMPROVEMENT: Glassmorphism weather card ── */
+.weather-card {
+  width: 100%;
+  max-width: 540px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--glass-shadow);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: cardIn 0.45s var(--ease);
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Card header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.city {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--text-1);
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+}
+
+.region,
+.local-date {
+  color: var(--text-2);
+  font-size: 0.82rem;
+  margin-top: 3px;
+}
+
+/* IMPROVEMENT: weather-icons library — large, vivid, expressive */
+.weather-main-icon {
+  font-size: 4rem;
+  color: var(--text-1);
+  text-shadow: 0 4px 20px rgba(125, 211, 252, 0.4);
+  flex-shrink: 0;
+  animation: iconPop 0.4s var(--ease);
+}
+
+@keyframes iconPop {
+  from {
+    transform: scale(0.5) rotate(-20deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Temperature */
+.temp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.temp-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.temp-value {
+  font-size: 5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-1);
+  letter-spacing: -3px;
+}
+
+.unit-switch {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 4px;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.u-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  font-family: "Outfit", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 50px;
+  transition:
+    background var(--dur),
+    color var(--dur);
+}
+
+.u-btn.active {
+  background: var(--accent);
+  color: #0c4a6e;
+}
+
+.u-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--glass-border);
+}
+
+.condition-text {
+  font-size: 1.1rem;
+  color: var(--text-1);
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.feels-like {
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+
+/* Divider */
+.card-divider {
+  height: 1px;
+  background: var(--glass-border);
+}
+
+/* IMPROVEMENT: 3-column stat tiles with progress bars */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.stat-tile {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-tile);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Tooltip via CSS */
+  position: relative;
+  cursor: default;
+  transition:
+    transform var(--dur),
+    border-color var(--dur);
+}
+
+/* IMPROVEMENT: Hover lift + accent border on stat tiles */
+.stat-tile:hover {
+  transform: translateY(-3px);
+  border-color: rgba(125, 211, 252, 0.5);
+}
+
+/* CSS tooltip */
+.stat-tile::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.stat-tile:hover::after {
+  opacity: 1;
+}
+
+.stat-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-emoji {
+  font-size: 1rem;
+}
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.stat-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-1);
+}
+
+/* IMPROVEMENT: Animated progress bars (humidity + wind) */
+.progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  width: 0; /* set by JS */
+  transition: width 0.8s var(--ease);
+}
+
+.humidity-bar {
+  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+}
+.wind-bar {
+  background: linear-gradient(90deg, #34d399, #6ee7b7);
+}
+
+/* Min / Max strip */
+.minmax-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  color: var(--text-1);
+}
+
+.strip-label {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Idle state ── */
+.idle-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 0;
+  color: var(--text-2);
+}
+
+.idle-icon {
+  font-size: 4rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.idle-text {
+  font-size: 0.95rem;
+}
+
+/* ── IMPROVEMENT: Footer ── */
+.footer {
+  margin-top: auto;
+  font-size: 0.78rem;
+  color: var(--text-3);
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.footer strong {
+  color: var(--text-2);
+}
+
+/* ── Utilities ── */
+.hidden {
+  display: none !important;
+}
+
+/* ── Keyframes ── */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Responsive ── */
+
+/* Tablet: keep 3-col grid, slightly wider */
+@media (min-width: 541px) {
+  .app-shell {
+    padding: 36px 24px 28px;
+  }
+}
+
+/* Mobile: collapse to 2-col grid */
+@media (max-width: 420px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .temp-value {
+    font-size: 3.8rem;
+  }
+  .city {
+    font-size: 1.5rem;
+  }
+  .weather-card {
+    padding: 20px;
+  }
+  .weather-main-icon {
+    font-size: 3rem;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 340px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .temp-value {
+    font-size: 3rem;
+  }
+}
